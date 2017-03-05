@@ -1,5 +1,6 @@
 #ifndef Shifty_h
 #define Shifty_h
+#define Shifty_max_pins 64 // for pwm
 
 #include <Arduino.h>
 
@@ -7,6 +8,11 @@ class Shifty {
   public:
 
   Shifty();
+
+  // PWM
+  void pwmLoop();
+  void setPwmFrequency(uint16_t hertz);
+  void writePwmBit(int bitnum, uint8_t dutyCycle); // 0-255, for pwm
 
   void setBitCount(int bitCount);
   void setPins(int dataPin, int clockPin, int latchPin, int readPin);
@@ -35,6 +41,12 @@ class Shifty {
   byte readBuffer[16];
   bool batchWriteMode;
   bool batchReadMode;
+
+  // PWM Stuff
+  unsigned long pwmTickStartMicros;
+  uint16_t pwmPeriod;
+  int pinPwmDutyCycle[Shifty_max_pins];
+  bool pinPwmState[Shifty_max_pins];
 
   void writeAllBits();
   void readAllBits();

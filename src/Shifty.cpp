@@ -1,7 +1,56 @@
 #include <Shifty.h>
 
 Shifty::Shifty() {
+  pwmTickStartMicros = 0;
+  pwmPeriod = 10000;
+
+  // Set all PWM pins to -1, -1 means PWM is disabled
+  for (uint8_t i = 0; i < Shifty_max_pins; i++) {
+    pinPwmDutyCycle[i] = -1;
+  }
 }
+
+// hertz should be a reasonable value > 100
+void Shifty::setPwmFrequency(uint16_t hertz) {
+  pwmPeriod = 1000000/hertz;
+}
+
+void Shifty::writePwmBit(int bitnum, uint8_t dutyCycle) {
+  pinPwmDutyCycle[bitnum] = dutyCycle;
+}
+
+void Shifty::pwmLoop() {
+  // if current tick elapsed duration >= pwm period
+  if (micros() - pwmTickStartMicros >= pwmPeriod) {
+    // new tick
+    pwmTickStartMicros = micros();
+  }
+
+  // Loop over all pins
+  for (uint8_t i = 0; i < Shifty_max_pins; i++) {
+    // skip this pin if duty cycle is -1 aka PWM disabled
+    if (pinPwmDutyCycle[i] == -1) {
+      continue;
+    }
+
+    unsigned long pinOnDuration = pwmPeriod * pinPwmDutyCycle[i] / 255;
+
+    // if current tick elapsed duration < pinOnDuration
+    if (micros() - pwmTickStartMicros < pinOnDuration) {
+      // if current pin is not on, turn it on
+      if (pinPwmState[i]) {
+        writeBitHard(i, HIGH);
+      }
+    } else {
+      // if current pin is not off, turn it off
+      if (!pinPwmState[i]) {
+        writeBitHard(i, LOW);
+      }
+    }
+  }
+}
+
+
 
 void Shifty::setBitCount(int bitCount) {
   this->bitCount = bitCount;
@@ -36,6 +85,8 @@ void Shifty::batchWriteBegin() {
 }
 
 void Shifty::writeBit(int bitnum, bool value) {
+  pinPwmDutyCycle[bitnum] = -1; // disable PWM on this pin
+
   if(batchWriteMode) {
     writeBitSoft(bitnum, value);
   } else {
@@ -76,7 +127,7 @@ void Shifty::setBitMode(int bitnum, bool mode) {
 bool Shifty::getBitMode(int bitnum){ //true == input
   int bytenum = bitnum / 8; // get working byte offset
   int offset = bitnum % 8;  // get working bit offset
-  byte b = this->dataModes[bytenum]; //set b to working byte
+  // byte b = this->dataModes[bytenum]; //set b to working byte
   return bitRead(this->dataModes[bytenum], offset);
 }
 
@@ -151,8 +202,8 @@ bool Shifty::readBitHard(int bitnum) {
 void Shifty::readAllBits() {
   for(int i = 0; i < this->byteCount; i++) {
     byte mask = this->dataModes[i];
-    byte outb = this->writeBuffer[i];
-    byte inb = 0;
+    // byte outb = this->writeBuffer[i];
+    // byte inb = 0;
     for(int j = 0; j < 8; j++) {
       if(bitRead(mask, j)) {
         readBitHard(i * 8 + j);

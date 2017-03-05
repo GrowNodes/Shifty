@@ -28,6 +28,20 @@ If you have a single shift register with data on pin 11, clock on pin 12, and la
       delay(500);
     }
 
+### Software PWM
+Shifty myreg;
+
+void setup() {
+  myreg.setBitCount(8);
+  myreg.setPins(11, 12, 8);
+  myreg.setPwmFrequency(100); // 100 hz
+  writePwmBit(50); // duty cycle 0-255
+}
+
+void loop() {
+  myreg.pwmLoop();
+}
+
 ### Batch Mode
 
 In order to make reading/writing bits on your shift register simpler, Shifty buffers your output, and then rewrites all your output every time you set a bit.  However, if you wanted to speed this up, you can wrap a number of bit sets into a single batch:
@@ -83,7 +97,7 @@ So, to read pins, do:
     void loop() {
       if(myreg.readBit(4) == HIGH) {
         myreg.writeBit(5, HIGH);
-      } else { 
+      } else {
         myreg.writeBit(5, LOW);
       }
     }
