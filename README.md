@@ -29,18 +29,19 @@ If you have a single shift register with data on pin 11, clock on pin 12, and la
     }
 
 ### Software PWM
-Shifty myreg;
 
-void setup() {
-  myreg.setBitCount(8);
-  myreg.setPins(11, 12, 8);
-  myreg.setPwmFrequency(100); // 100 hz
-  writePwmBit(50); // duty cycle 0-255
-}
-
-void loop() {
-  myreg.pwmLoop();
-}
+    Shifty myreg;
+    
+    void setup() {
+      myreg.setBitCount(8);
+      myreg.setPins(11, 12, 8);
+      myreg.setPwmFrequency(100); // 100 hz
+      writePwmBit(50); // duty cycle 0-255
+    }
+    
+    void loop() {
+      myreg.pwmLoop();
+    }
 
 ### Batch Mode
 
