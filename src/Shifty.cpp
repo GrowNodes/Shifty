@@ -1,20 +1,32 @@
 #include <Shifty.h>
 
-Shifty::Shifty() {
+Shifty::Shifty(int dataPin, int clockPin, int latchPin, int readPin, uint16_t pwmHertz):
+FSO(dataPin, clockPin, MSBFIRST)
+{
   pwmTickStartMicros = 0;
-  pwmPeriod = 10000;
 
   // Set all PWM pins to -1, -1 means PWM is disabled
   for (uint8_t i = 0; i < Shifty_max_pins; i++) {
     pinPwmDutyCycle[i] = -1;
   }
+
+  this->pwmPeriod = 1000000/pwmHertz;
+  this->dataPin = dataPin;
+  this->clockPin = clockPin;
+  this->latchPin = latchPin;
+  if(readPin != -1) {
+    this->readPin = readPin;
+  }
+}
+
+void Shifty::setup() {
+  pinMode(this->dataPin, OUTPUT);
+  pinMode(this->clockPin, OUTPUT);
+  pinMode(this->latchPin, OUTPUT);
+  pinMode(this->readPin, INPUT);
 }
 
 // hertz should be a reasonable value > 100
-void Shifty::setPwmFrequency(uint16_t hertz) {
-  pwmPeriod = 1000000/hertz;
-}
-
 void Shifty::writePwmBit(int bitnum, uint8_t dutyCycle) {
   pinPwmDutyCycle[bitnum] = dutyCycle;
 }
@@ -62,24 +74,6 @@ void Shifty::setBitCount(int bitCount) {
   }
 }
 
-void Shifty::setPins(int dataPin, int clockPin, int latchPin, int readPin) {
-  pinMode(dataPin, OUTPUT);
-  pinMode(clockPin, OUTPUT);
-  pinMode(latchPin, OUTPUT);
-  pinMode(readPin, INPUT);
-  this->dataPin = dataPin;
-  this->clockPin = clockPin;
-  this->latchPin = latchPin;
-  if(readPin != -1) {
-    this->readPin = readPin;
-  }
-}
-
-void Shifty::setPins(int dataPin, int clockPin, int latchPin) {
-  setPins(dataPin, clockPin, latchPin, -1);
-}
-
-
 void Shifty::batchWriteBegin() {
   batchWriteMode = true;
 }
@@ -105,6 +99,8 @@ void Shifty::batchReadBegin() {
 }
 
 bool Shifty::readBit(int bitnum) {
+  pinPwmDutyCycle[bitnum] = -1; // disable PWM on this pin
+
   if(batchReadMode) {
     return readBitSoft(bitnum);
   } else {
@@ -154,7 +150,8 @@ void Shifty::writeAllBits() {
   digitalWrite(latchPin, LOW);
   digitalWrite(clockPin, LOW);
   for(int i = 0; i < this->byteCount; i++) {
-    shiftOut(dataPin, clockPin, MSBFIRST, this->writeBuffer[i]);
+    // shiftOut(dataPin, clockPin, MSBFIRST, this->writeBuffer[i]);
+    FSO.write(this->writeBuffer[i]);
   }
   digitalWrite(latchPin, HIGH);
 }

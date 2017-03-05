@@ -3,20 +3,18 @@
 #define Shifty_max_pins 64 // for pwm
 
 #include <Arduino.h>
+#include "FastShiftOut.h"
 
 class Shifty {
   public:
 
-  Shifty();
+  Shifty(int dataPin, int clockPin, int latchPin, int readPin, uint16_t pwmHertz);
 
   // PWM
   void pwmLoop();
-  void setPwmFrequency(uint16_t hertz);
   void writePwmBit(int bitnum, uint8_t dutyCycle); // 0-255, for pwm
-
+  void setup();
   void setBitCount(int bitCount);
-  void setPins(int dataPin, int clockPin, int latchPin, int readPin);
-  void setPins(int dataPin, int clockPin, int latchPin);
   void setBitMode(int bitnum, bool mode);
   bool getBitMode(int bitnum);
   void batchWriteBegin();
@@ -28,6 +26,7 @@ class Shifty {
   bool readBit(int bitnum);
 
   private:
+  FastShiftOut FSO;
 
   int dataPin;
   int clockPin;
