@@ -33,10 +33,10 @@ void Shifty::pwmLoop() {
       continue;
     }
 
-    unsigned long pinOnDuration = pwmPeriod * pinPwmDutyCycle[i] / 255;
+    unsigned long pinPulseWidthDuration = pwmPeriod * pinPwmDutyCycle[i] / 255;
 
-    // if current tick elapsed duration < pinOnDuration
-    if (micros() - pwmTickStartMicros < pinOnDuration) {
+    // if current tick elapsed duration < pinPulseWidthDuration
+    if (micros() - pwmTickStartMicros < pinPulseWidthDuration) {
       // if current pin is not on, turn it on
       if (pinPwmState[i]) {
         writeBitHard(i, HIGH);
